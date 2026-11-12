@@ -21,7 +21,7 @@ import java.util.Map;
  * Перед включением согласовать Bearer JWT / сессионную cookie от BFF, URL и справочник прав.
  */
 @Component
-@ConditionalOnProperty(prefix="integrations.auth", name="enabled", havingValue="true")
+@ConditionalOnProperty(prefix = "integrations.auth", name = "enabled", havingValue = "true")
 public class AuthClient {
     private final RestClient rest;
 
@@ -40,10 +40,10 @@ public class AuthClient {
         try {
             // TODO(команда Авторизация): удостовериться, что /verify принимает именно JWT, а не BFF-cookie.
             Identity user = rest.post().uri("/api/auth/verify")
-                .body(Map.of("token", header.substring(7).trim()))
-                .retrieve().body(Identity.class);
+                    .body(Map.of("token", header.substring(7).trim()))
+                    .retrieve().body(Identity.class);
             if (user == null || user.userId() == null || user.userId().isBlank() ||
-                user.role() == null || user.role().isBlank()) {
+                    user.role() == null || user.role().isBlank()) {
                 throw new ApiException(HttpStatus.BAD_GATEWAY, "Сервис авторизации вернул неполную личность");
             }
             return user;
@@ -61,8 +61,8 @@ public class AuthClient {
         try {
             // TODO(команда Авторизация): подтвердить имена reference.* в таблице permissions.
             PermissionDecision result = rest.post().uri("/api/auth/permissions/check")
-                .body(Map.of("user_id", userId, "permission", permission))
-                .retrieve().body(PermissionDecision.class);
+                    .body(Map.of("user_id", userId, "permission", permission))
+                    .retrieve().body(PermissionDecision.class);
             if (result == null || result.allowed() == null) {
                 throw new ApiException(HttpStatus.BAD_GATEWAY, "Сервис авторизации не вернул allowed");
             }
@@ -74,6 +74,9 @@ public class AuthClient {
         }
     }
 
-    public record Identity(@JsonProperty("user_id") String userId, String role) {}
-    public record PermissionDecision(Boolean allowed) {}
+    public record Identity(@JsonProperty("user_id") String userId, String role) {
+    }
+
+    public record PermissionDecision(Boolean allowed) {
+    }
 }

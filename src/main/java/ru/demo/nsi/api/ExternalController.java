@@ -7,7 +7,9 @@ import ru.demo.nsi.config.ActorContext;
 import ru.demo.nsi.service.CatalogService;
 import ru.demo.nsi.service.NsiService;
 
-/** Only reads required by the checklist module and the demo UI. */
+/**
+ * Only reads required by the checklist module and the demo UI.
+ */
 @RestController
 @RequestMapping("/api/v1/references")
 @Tag(name = "1. Чтение авиационных справочников", description = "Для клиента техника и команды Основная логика: данные для формирования чек-листа. В автономном демо X-Demo-Role.")
@@ -63,9 +65,9 @@ public class ExternalController {
     }
 
     @Operation(summary = "Снимок конкретной версии процедуры — для основной логики",
-        description = "ИНТЕГРАЦИЯ: вызывается командой Основная логика для ранее созданного чек-листа. " +
-            "APPROVED или ARCHIVED, но никогда DRAFT/REVIEW. " +
-            "Не используйте архивную версию для создания нового чек-листа.")
+            description = "ИНТЕГРАЦИЯ: вызывается командой Основная логика для ранее созданного чек-листа. " +
+                    "APPROVED или ARCHIVED, но никогда DRAFT/REVIEW. " +
+                    "Не используйте архивную версию для создания нового чек-листа.")
     @GetMapping("/procedure-templates/versions/{versionId}")
     public Object procedureVersionSnapshot(@PathVariable java.util.UUID versionId) {
         actor.read();
@@ -73,7 +75,7 @@ public class ExternalController {
     }
 
     @Operation(summary = "Актуальная утверждённая процедура со всеми этапами",
-               description = "Не возвращает черновые или архивные версии; подходит для формирования нового чек-листа")
+            description = "Не возвращает черновые или архивные версии; подходит для формирования нового чек-листа")
     @GetMapping("/procedure-templates/resolve")
     public Object resolve(@RequestParam(name = "aircraft_type_code") String aircraft,
                           @RequestParam(name = "procedure_code") String procedure) {

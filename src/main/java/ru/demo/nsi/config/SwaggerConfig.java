@@ -16,30 +16,33 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Stream;
 
-/** Авторизация: в демо X-Demo-Role; после согласования с командой Авторизация — Bearer JWT. */
+/**
+ * Авторизация: в демо X-Demo-Role; после согласования с командой Авторизация — Bearer JWT.
+ */
 @Configuration
-@OpenAPIDefinition(info=@Info(title="Модуль Справочники (НСИ) — DEMO",version="0.2.0",
-    description="31 основных метода + GET исторического снимка для Основной логики. " +
-        "Интеграции с Авторизацией и Логированием выключены по умолчанию. " +
-        "В демо Authorize: TECHNICIAN / REFERENCE_EDITOR / SUPERVISOR; POST/PATCH требует Idempotency-Key."),
-    security=@SecurityRequirement(name="X-Demo-Role"))
-@SecurityScheme(name="X-Demo-Role",type=SecuritySchemeType.APIKEY,in=SecuritySchemeIn.HEADER,paramName="X-Demo-Role",
-    description="ТОЛЬКО демонстрация: SUPERVISOR / REFERENCE_EDITOR / TECHNICIAN")
-@SecurityScheme(name="BearerAuth",type=SecuritySchemeType.HTTP,scheme="bearer",bearerFormat="JWT",
-    description="Будущая интеграция команды Авторизация; использовать только после согласования API.")
+@OpenAPIDefinition(info = @Info(title = "Модуль Справочники (НСИ) — DEMO", version = "0.2.0",
+        description = "31 основных метода + GET исторического снимка для Основной логики. " +
+                "Интеграции с Авторизацией и Логированием выключены по умолчанию. " +
+                "В демо Authorize: TECHNICIAN / REFERENCE_EDITOR / SUPERVISOR; POST/PATCH требует Idempotency-Key."),
+        security = @SecurityRequirement(name = "X-Demo-Role"))
+@SecurityScheme(name = "X-Demo-Role", type = SecuritySchemeType.APIKEY, in = SecuritySchemeIn.HEADER, paramName = "X-Demo-Role",
+        description = "ТОЛЬКО демонстрация: SUPERVISOR / REFERENCE_EDITOR / TECHNICIAN")
+@SecurityScheme(name = "BearerAuth", type = SecuritySchemeType.HTTP, scheme = "bearer", bearerFormat = "JWT",
+        description = "Будущая интеграция команды Авторизация; использовать только после согласования API.")
 public class SwaggerConfig {
     private final boolean authEnabled;
+
     public SwaggerConfig(@Value("${integrations.auth.enabled:false}") boolean authEnabled) {
         this.authEnabled = authEnabled;
     }
 
     @Bean
     OpenApiCustomizer idempotencyHeader() {
-        return api -> api.getPaths().forEach((path,item) -> {
-            Stream.of(item.getPost(),item.getPatch(),item.getDelete()).filter(Objects::nonNull)
-                .forEach(op -> op.addParametersItem(new Parameter().name("Idempotency-Key").in("header")
-                    .required(true).description("Уникальный ключ запроса; повтор возвращает исходный ответ")
-                    .schema(new StringSchema())));
+        return api -> api.getPaths().forEach((path, item) -> {
+            Stream.of(item.getPost(), item.getPatch(), item.getDelete()).filter(Objects::nonNull)
+                    .forEach(op -> op.addParametersItem(new Parameter().name("Idempotency-Key").in("header")
+                            .required(true).description("Уникальный ключ запроса; повтор возвращает исходный ответ")
+                            .schema(new StringSchema())));
         });
     }
 

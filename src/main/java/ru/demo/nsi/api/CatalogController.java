@@ -12,7 +12,9 @@ import ru.demo.nsi.service.IdempotencyService;
 
 import java.util.UUID;
 
-/** Dedicated CRUD for the relationships discussed at the project review. */
+/**
+ * Dedicated CRUD for the relationships discussed at the project review.
+ */
 @RestController
 @RequestMapping("/api/v1/references")
 @Tag(name = "2. Авиационные данные — создание и PATCH", description = "Аэропорт → стоянки; тип ВС → борта и нормы")
@@ -134,7 +136,7 @@ public class CatalogController {
     }
 
     @Operation(summary = "Частично обновить базовый норматив без новой версии",
-               description = "Опубликованные этапы процедур сохраняют свои прежние нормативы")
+            description = "Опубликованные этапы процедур сохраняют свои прежние нормативы")
     @PatchMapping("/operation-norms/{id}")
     public ResponseEntity<Object> patchNorm(@PathVariable UUID id, @RequestBody OperationNormPatch req) {
         actor.editor();

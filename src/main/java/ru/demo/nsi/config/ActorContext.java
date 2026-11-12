@@ -58,12 +58,29 @@ public class ActorContext {
     }
 
     // TODO(команда Авторизация): сверить права с фактическим справочником permissions.
-    public void read() { check("reference.read", "TECHNICIAN", "REFERENCE_EDITOR", "SUPERVISOR"); }
-    public void editor() { check("reference.record.write", "REFERENCE_EDITOR", "SUPERVISOR"); }
-    public void supervisor() { check("reference.directory.create", "SUPERVISOR"); }
-    public void submitVersion() { check("reference.version.submit", "REFERENCE_EDITOR", "SUPERVISOR"); }
-    public void approveVersion() { check("reference.version.approve", "SUPERVISOR"); }
-    public void auditRead() { check("reference.audit.read", "SUPERVISOR"); }
+    public void read() {
+        check("reference.read", "TECHNICIAN", "REFERENCE_EDITOR", "SUPERVISOR");
+    }
+
+    public void editor() {
+        check("reference.record.write", "REFERENCE_EDITOR", "SUPERVISOR");
+    }
+
+    public void supervisor() {
+        check("reference.directory.create", "SUPERVISOR");
+    }
+
+    public void submitVersion() {
+        check("reference.version.submit", "REFERENCE_EDITOR", "SUPERVISOR");
+    }
+
+    public void approveVersion() {
+        check("reference.version.approve", "SUPERVISOR");
+    }
+
+    public void auditRead() {
+        check("reference.audit.read", "SUPERVISOR");
+    }
 
     private void check(String permission, String... allowedRoles) {
         String current = role();

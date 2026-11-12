@@ -15,7 +15,7 @@ import java.time.Duration;
  * Для production нужна согласованная схема, авторизация сервис-сервис и надёжная доставка.
  */
 @Component
-@ConditionalOnProperty(prefix="integrations.logging", name="enabled", havingValue="true")
+@ConditionalOnProperty(prefix = "integrations.logging", name = "enabled", havingValue = "true")
 public class LoggingClient {
     private final RestClient rest;
     private final String eventsPath;

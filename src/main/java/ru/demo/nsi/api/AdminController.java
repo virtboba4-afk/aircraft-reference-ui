@@ -23,7 +23,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/references")
 @Tag(name = "3. Шаблоны процедур — версии и аудит",
-     description = "Для редактора НСИ и супервайзера; будущая проверка прав через сервис Авторизация. DRAFT → REVIEW → APPROVED.")
+        description = "Для редактора НСИ и супервайзера; будущая проверка прав через сервис Авторизация. DRAFT → REVIEW → APPROVED.")
 public class AdminController {
     private final NsiService nsi;
     private final DirectoryRepository directories;
@@ -45,7 +45,7 @@ public class AdminController {
         }
         if (found.size() != 1) {
             throw new ApiException(HttpStatus.CONFLICT,
-                "В учебном API поддерживается один реестр PROCEDURE_TEMPLATE");
+                    "В учебном API поддерживается один реестр PROCEDURE_TEMPLATE");
         }
         return found.getFirst().id;
     }
@@ -79,7 +79,7 @@ public class AdminController {
     @Operation(summary = "Добавить шаблон процедуры в DRAFT")
     @PostMapping("/procedure-templates/versions/{versionId}/records")
     public ResponseEntity<Object> createRecord(@PathVariable UUID versionId,
-                                                @Valid @RequestBody RecordCreate req) {
+                                               @Valid @RequestBody RecordCreate req) {
         actor.editor();
         return idem.run(req, 201, () -> nsi.createRecord(procedureDirectoryId(), versionId, req));
     }
@@ -87,8 +87,8 @@ public class AdminController {
     @Operation(summary = "Частично изменить шаблон в DRAFT")
     @PatchMapping("/procedure-templates/versions/{versionId}/records/{recordId}")
     public ResponseEntity<Object> patchRecord(@PathVariable UUID versionId,
-                                               @PathVariable UUID recordId,
-                                               @RequestBody RecordPatch req) {
+                                              @PathVariable UUID recordId,
+                                              @RequestBody RecordPatch req) {
         actor.editor();
         return idem.run(req, 200, () -> nsi.patchRecord(procedureDirectoryId(), versionId, recordId, req));
     }
@@ -96,8 +96,8 @@ public class AdminController {
     @Operation(summary = "Добавить этап в черновик процедуры")
     @PostMapping("/procedure-templates/versions/{versionId}/records/{recordId}/stages")
     public ResponseEntity<Object> createStage(@PathVariable UUID versionId,
-                                               @PathVariable UUID recordId,
-                                               @Valid @RequestBody StageCreate req) {
+                                              @PathVariable UUID recordId,
+                                              @Valid @RequestBody StageCreate req) {
         actor.editor();
         return idem.run(req, 201, () -> nsi.createStage(procedureDirectoryId(), versionId, recordId, req));
     }
@@ -105,12 +105,12 @@ public class AdminController {
     @Operation(summary = "Частично изменить этап в черновике")
     @PatchMapping("/procedure-templates/versions/{versionId}/records/{recordId}/stages/{stageId}")
     public ResponseEntity<Object> patchStage(@PathVariable UUID versionId,
-                                              @PathVariable UUID recordId,
-                                              @PathVariable UUID stageId,
-                                              @RequestBody StagePatch req) {
+                                             @PathVariable UUID recordId,
+                                             @PathVariable UUID stageId,
+                                             @RequestBody StagePatch req) {
         actor.editor();
         return idem.run(req, 200,
-            () -> nsi.patchStage(procedureDirectoryId(), versionId, recordId, stageId, req));
+                () -> nsi.patchStage(procedureDirectoryId(), versionId, recordId, stageId, req));
     }
 
     @Operation(summary = "Отправить черновик на согласование")
@@ -130,7 +130,7 @@ public class AdminController {
     @Operation(summary = "Отклонить версию с указанием причины")
     @PostMapping("/procedure-templates/versions/{versionId}/reject")
     public ResponseEntity<Object> reject(@PathVariable UUID versionId,
-                                          @RequestBody Reason reason) {
+                                         @RequestBody Reason reason) {
         actor.approveVersion();
         return idem.run(reason, 200, () -> nsi.reject(procedureDirectoryId(), versionId, reason.reason()));
     }

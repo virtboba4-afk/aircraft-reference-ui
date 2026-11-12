@@ -24,8 +24,8 @@ public class AuditEventListener {
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onAudit(ReferenceAuditEvent event) {
         LOG.info("nsi_audit eventId={} eventType={} entityType={} entityId={} actorId={} requestId={}",
-            event.eventId(), event.eventType(), event.entityType(), event.entityId(),
-            event.userId(), event.requestId());
+                event.eventId(), event.eventType(), event.entityType(), event.entityId(),
+                event.userId(), event.requestId());
         LoggingClient client = externalLogging.getIfAvailable();
         if (client != null) {
             try {
