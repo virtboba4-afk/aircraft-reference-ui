@@ -10,7 +10,7 @@ import ru.demo.nsi.service.NsiService;
 /** Only reads required by the checklist module and the demo UI. */
 @RestController
 @RequestMapping("/api/v1/references")
-@Tag(name = "1. Чтение авиационных справочников", description = "Опубликованные данные и типизированный каталог")
+@Tag(name = "1. Чтение авиационных справочников", description = "Для клиента техника и команды Основная логика: данные для формирования чек-листа. В автономном демо X-Demo-Role.")
 public class ExternalController {
     private final NsiService nsi;
     private final CatalogService catalog;
@@ -60,6 +60,16 @@ public class ExternalController {
                             @RequestParam(defaultValue = "0") int offset) {
         actor.read();
         return nsi.publicList("PROCEDURE_TEMPLATE", procedure, "aircraft_type_code", type, limit, offset);
+    }
+
+    @Operation(summary = "Снимок конкретной версии процедуры — для основной логики",
+        description = "ИНТЕГРАЦИЯ: вызывается командой Основная логика для ранее созданного чек-листа. " +
+            "APPROVED или ARCHIVED, но никогда DRAFT/REVIEW. " +
+            "Не используйте архивную версию для создания нового чек-листа.")
+    @GetMapping("/procedure-templates/versions/{versionId}")
+    public Object procedureVersionSnapshot(@PathVariable java.util.UUID versionId) {
+        actor.read();
+        return nsi.procedureVersionSnapshot(versionId);
     }
 
     @Operation(summary = "Актуальная утверждённая процедура со всеми этапами",

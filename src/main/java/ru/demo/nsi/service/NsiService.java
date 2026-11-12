@@ -3,6 +3,8 @@ package ru.demo.nsi.service;
 import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import org.springframework.http.HttpStatus;
+import org.springframework.context.ApplicationEventPublisher;
+import ru.demo.nsi.integration.logging.ReferenceAuditEvent;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.demo.nsi.api.*;
@@ -27,10 +29,12 @@ public class NsiService {
     private final ObjectMapper mapper;
     private final ActorContext actor;
     private final CatalogService catalog;
+    private final ApplicationEventPublisher events;
     public NsiService(DirectoryRepository directories,VersionRepository versions,RecordRepository records,
-       StageRepository stages,AuditRepository audits,ObjectMapper mapper,ActorContext actor,CatalogService catalog) {
+       StageRepository stages,AuditRepository audits,ObjectMapper mapper,ActorContext actor,
+       CatalogService catalog,ApplicationEventPublisher events) {
         this.directories=directories;this.versions=versions;this.records=records;this.stages=stages;
-        this.audits=audits;this.mapper=mapper;this.actor=actor;this.catalog=catalog;
+        this.audits=audits;this.mapper=mapper;this.actor=actor;this.catalog=catalog;this.events=events;
     }
     private ApiException bad(String message){return new ApiException(HttpStatus.UNPROCESSABLE_ENTITY,message);}
     private ApiException conflict(String message){return new ApiException(HttpStatus.CONFLICT,message);}
@@ -357,6 +361,9 @@ public class NsiService {
         a.entityId=entityId;a.versionId=versionId;a.operation=op;
         a.oldValue=oldValue==null?null:mapper.valueToTree(oldValue);a.newValue=newValue==null?null:mapper.valueToTree(newValue);
         a.reason=reason;a.requestId=actor.requestId();a.createdAt=Instant.now();audits.save(a);
+        // Для команды Логирование: без передачи содержимого нормативов и данных пользователя.
+        events.publishEvent(new ReferenceAuditEvent(a.id,"reference-service","REFERENCE_"+op,
+            entityType,entityId,versionId,a.actorId,a.requestId,a.createdAt));
     }
     private Map<String,Object> auditView(AuditLog a){
         return obj("id",a.id,"actor_id",a.actorId,"entity_type",a.entityType,"entity_id",a.entityId,
@@ -407,6 +414,27 @@ public class NsiService {
         if(matching.size()>1)throw conflict("Найдено несколько действующих шаблонов — требуется уточнить применимость");
         return resolved(matching.getFirst());
     }
+    /**
+     * INTEGRATION — команда «Основная логика»: прочитать зафиксированный снимок процедуры
+     * для уже существующего чек-листа. Это НЕ метод выбора актуальной версии для нового рейса.
+     * Для нового чек-листа использовать resolve(...); у ARCHIVED usable_for_new_checklist=false.
+     */
+    @Transactional(readOnly=true)
+    public Map<String,Object> procedureVersionSnapshot(UUID versionId) {
+        ReferenceVersion v=versions.findById(versionId).orElseThrow(()->missing("Версия не найдена"));
+        DirectoryEntity d=directory(v.directoryId);
+        if (!"PROCEDURE_TEMPLATE".equals(d.kind))
+            throw missing("Версия не относится к шаблонам процедур");
+        if (v.status!=ReferenceVersion.Status.APPROVED && v.status!=ReferenceVersion.Status.ARCHIVED)
+            throw missing("Только опубликованные и архивные снимки доступны внешнему сервису");
+        boolean current = v.status==ReferenceVersion.Status.APPROVED;
+        return obj("reference_version_id",v.id,"directory_code",d.code,
+            "version_number",v.versionNumber,"status",v.status,
+            "published_at",v.publishedAt,"usable_for_new_checklist",current,
+            "checksum",checksum(v),"records",records.findByVersionIdOrderByCode(v.id)
+                .stream().map(this::recordView).toList());
+    }
+
     @Transactional(readOnly=true)
     public Map<String,Object> snapshot(UUID versionId){
         ReferenceVersion v=versions.findById(versionId).orElseThrow(()->missing("Версия не найдена"));

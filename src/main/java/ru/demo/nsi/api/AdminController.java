@@ -23,7 +23,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/references")
 @Tag(name = "3. Шаблоны процедур — версии и аудит",
-     description = "DRAFT → REVIEW → APPROVED. В MVP один реестр PROCEDURE_TEMPLATE.")
+     description = "Для редактора НСИ и супервайзера; будущая проверка прав через сервис Авторизация. DRAFT → REVIEW → APPROVED.")
 public class AdminController {
     private final NsiService nsi;
     private final DirectoryRepository directories;
@@ -116,14 +116,14 @@ public class AdminController {
     @Operation(summary = "Отправить черновик на согласование")
     @PostMapping("/procedure-templates/versions/{versionId}/submit")
     public ResponseEntity<Object> submit(@PathVariable UUID versionId) {
-        actor.editor();
+        actor.submitVersion();
         return idem.run(null, 200, () -> nsi.submit(procedureDirectoryId(), versionId));
     }
 
     @Operation(summary = "Утвердить версию и архивировать предыдущую")
     @PostMapping("/procedure-templates/versions/{versionId}/approve")
     public ResponseEntity<Object> approve(@PathVariable UUID versionId) {
-        actor.supervisor();
+        actor.approveVersion();
         return idem.run(null, 200, () -> nsi.approve(procedureDirectoryId(), versionId));
     }
 
@@ -131,7 +131,7 @@ public class AdminController {
     @PostMapping("/procedure-templates/versions/{versionId}/reject")
     public ResponseEntity<Object> reject(@PathVariable UUID versionId,
                                           @RequestBody Reason reason) {
-        actor.supervisor();
+        actor.approveVersion();
         return idem.run(reason, 200, () -> nsi.reject(procedureDirectoryId(), versionId, reason.reason()));
     }
 
@@ -142,7 +142,7 @@ public class AdminController {
                         @RequestParam(name = "entity_id", required = false) UUID entityId,
                         @RequestParam(defaultValue = "50") int limit,
                         @RequestParam(defaultValue = "0") int offset) {
-        actor.supervisor();
+        actor.auditRead();
         return nsi.audits(user, entity, entityId, limit, offset);
     }
 }

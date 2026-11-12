@@ -2,6 +2,8 @@ package ru.demo.nsi.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.http.HttpStatus;
+import org.springframework.context.ApplicationEventPublisher;
+import ru.demo.nsi.integration.logging.ReferenceAuditEvent;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.demo.nsi.api.ApiException;
@@ -30,14 +32,16 @@ public class CatalogService {
     private final AuditRepository audits;
     private final ActorContext actor;
     private final ObjectMapper mapper;
+    private final ApplicationEventPublisher events;
 
     public CatalogService(AirportRepository airports, ParkingStandRepository stands,
                           AircraftTypeRepository types, AircraftRepository aircraft,
                           OperationTypeRepository operations, OperationNormRepository norms,
-                          AuditRepository audits, ActorContext actor, ObjectMapper mapper) {
+                          AuditRepository audits, ActorContext actor, ObjectMapper mapper,
+                          ApplicationEventPublisher events) {
         this.airports=airports; this.stands=stands; this.types=types;
         this.aircraft=aircraft; this.operations=operations; this.norms=norms;
-        this.audits=audits; this.actor=actor; this.mapper=mapper;
+        this.audits=audits; this.actor=actor; this.mapper=mapper; this.events=events;
     }
 
     private ApiException notFound(String entity) { return new ApiException(HttpStatus.NOT_FOUND, entity+" не найден(а)"); }
@@ -87,6 +91,9 @@ public class CatalogService {
         log.oldValue=oldValue==null?null:mapper.valueToTree(oldValue);
         log.newValue=newValue==null?null:mapper.valueToTree(newValue);
         log.requestId=actor.requestId();log.createdAt=Instant.now();audits.save(log);
+        // Для команды Логирование: событие обработается только ПОСЛЕ commit.
+        events.publishEvent(new ReferenceAuditEvent(log.id,"reference-service","REFERENCE_"+action,
+            entity,id,null,log.actorId,log.requestId,log.createdAt));
     }
     private Map<String,Object> airportView(Airport a) {
         return obj("id",a.id,"iata_code",a.iataCode,"name",a.name,"city",a.city,"country",a.country,
